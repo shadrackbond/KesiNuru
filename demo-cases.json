@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "notice": "All people, organisations, communications and documents in this file are fictional and created solely for product testing.",
+  "cases": [
+    {
+      "id": "demo-unpaid-wages-001",
+      "title": "Amina — delayed and partially unpaid wages",
+      "category": "unpaid_wages",
+      "jurisdiction": "Kenya",
+      "persona": {
+        "name": "Amina Njeri",
+        "age": 26,
+        "location": "Nairobi",
+        "role": "Customer Support Associate",
+        "employer": "Blue Acacia Services Ltd (fictional)"
+      },
+      "intake": {
+        "employment_start_date": "2025-11-03",
+        "contract_type": "written_fixed_term",
+        "agreed_monthly_salary_kes": 45000,
+        "normal_pay_day": "last_working_day",
+        "dispute_summary": "The employee states that July 2026 salary was partially paid and August 2026 salary was not paid.",
+        "desired_outcome": "Obtain an accurate record of outstanding payments and prepare to seek professional or institutional assistance."
+      },
+      "evidence": [
+        {
+          "id": "ev-a1",
+          "filename": "employment-contract.pdf",
+          "document_type": "employment_contract",
+          "synthetic_contents": {
+            "employee": "Amina Njeri",
+            "employer": "Blue Acacia Services Ltd",
+            "start_date": "2025-11-03",
+            "monthly_salary_kes": 45000,
+            "pay_schedule": "Last working day of each month"
+          }
+        },
+        {
+          "id": "ev-a2",
+          "filename": "july-payslip.pdf",
+          "document_type": "payslip",
+          "synthetic_contents": {
+            "period": "2026-07",
+            "net_pay_kes": 38600,
+            "marked_as_paid": true
+          }
+        },
+        {
+          "id": "ev-a3",
+          "filename": "payment-record-july.png",
+          "document_type": "payment_record",
+          "synthetic_contents": {
+            "date": "2026-08-05",
+            "amount_kes": 20000,
+            "sender": "Blue Acacia Services Ltd"
+          }
+        },
+        {
+          "id": "ev-a4",
+          "filename": "hr-message-august.png",
+          "document_type": "message_screenshot",
+          "synthetic_contents": {
+            "date": "2026-09-02",
+            "sender": "HR Office",
+            "message": "We acknowledge the outstanding August payroll and will communicate an update."
+          }
+        }
+      ],
+      "expected_facts": [
+        {
+          "type": "agreed_monthly_salary",
+          "value": 45000,
+          "currency": "KES",
+          "source_ids": ["ev-a1"],
+          "expected_status": "candidate"
+        },
+        {
+          "type": "july_payslip_net_pay",
+          "value": 38600,
+          "currency": "KES",
+          "source_ids": ["ev-a2"],
+          "expected_status": "candidate"
+        },
+        {
+          "type": "july_payment_received",
+          "value": 20000,
+          "currency": "KES",
+          "source_ids": ["ev-a3"],
+          "expected_status": "candidate"
+        }
+      ],
+      "expected_checks": [
+        {
+          "type": "conflict",
+          "description": "The July payslip is marked paid, but the uploaded payment record shows a lower amount.",
+          "source_ids": ["ev-a2", "ev-a3"]
+        },
+        {
+          "type": "missing_evidence",
+          "description": "No August payslip or complete payment statement has been provided.",
+          "source_ids": []
+        },
+        {
+          "type": "calculation_requires_review",
+          "description": "Do not label a final amount as legally owed; show the arithmetic difference as a review item only.",
+          "source_ids": ["ev-a1", "ev-a2", "ev-a3"]
+        }
+      ],
+      "golden_demo": true
+    },
+    {
+      "id": "demo-termination-002",
+      "title": "Daniel — termination record with conflicting dates",
+      "category": "termination_documentation",
+      "jurisdiction": "Kenya",
+      "persona": {
+        "name": "Daniel Otieno",
+        "age": 31,
+        "location": "Kisumu",
+        "role": "Warehouse Assistant",
+        "employer": "Lakeview Supply Hub Ltd (fictional)"
+      },
+      "intake": {
+        "employment_start_date": "2024-02-01",
+        "contract_type": "written_indefinite",
+        "agreed_monthly_salary_kes": 32000,
+        "user_stated_last_working_day": "2026-08-18",
+        "dispute_summary": "The employee states that access was removed before a written termination letter was received and wants to organise the sequence of events.",
+        "desired_outcome": "Create a reliable timeline and identify missing records for professional review."
+      },
+      "evidence": [
+        {
+          "id": "ev-d1",
+          "filename": "employment-contract.pdf",
+          "document_type": "employment_contract",
+          "synthetic_contents": {
+            "employee": "Daniel Otieno",
+            "employer": "Lakeview Supply Hub Ltd",
+            "start_date": "2024-02-01",
+            "monthly_salary_kes": 32000,
+            "notice_clause": "One month written notice or payment in lieu, subject to applicable law"
+          }
+        },
+        {
+          "id": "ev-d2",
+          "filename": "supervisor-message.png",
+          "document_type": "message_screenshot",
+          "synthetic_contents": {
+            "date": "2026-08-18",
+            "sender": "Shift Supervisor",
+            "message": "Do not report for tomorrow's shift while management reviews the incident."
+          }
+        },
+        {
+          "id": "ev-d3",
+          "filename": "termination-letter.pdf",
+          "document_type": "termination_notice",
+          "synthetic_contents": {
+            "letter_date": "2026-08-21",
+            "effective_date": "2026-08-18",
+            "stated_reason": "Operational misconduct",
+            "hearing_reference": "Management review held on 20 August 2026"
+          }
+        },
+        {
+          "id": "ev-d4",
+          "filename": "employee-notes.txt",
+          "document_type": "user_note",
+          "synthetic_contents": {
+            "statement": "I did not attend a meeting on 20 August and received the letter by email on 22 August.",
+            "source": "user_stated"
+          }
+        }
+      ],
+      "expected_facts": [
+        {
+          "type": "letter_date",
+          "value": "2026-08-21",
+          "source_ids": ["ev-d3"],
+          "expected_status": "candidate"
+        },
+        {
+          "type": "termination_effective_date",
+          "value": "2026-08-18",
+          "source_ids": ["ev-d3"],
+          "expected_status": "candidate"
+        },
+        {
+          "type": "user_denies_hearing",
+          "value": true,
+          "source_ids": ["ev-d4"],
+          "expected_status": "user_stated"
+        }
+      ],
+      "expected_checks": [
+        {
+          "type": "chronology_review",
+          "description": "The termination letter is dated after the stated effective date.",
+          "source_ids": ["ev-d3"]
+        },
+        {
+          "type": "conflict",
+          "description": "The letter references a management review, while the employee states that no meeting occurred.",
+          "source_ids": ["ev-d3", "ev-d4"]
+        },
+        {
+          "type": "missing_evidence",
+          "description": "No invitation, minutes or acknowledgement relating to the referenced management review has been provided.",
+          "source_ids": []
+        },
+        {
+          "type": "human_review",
+          "description": "The system must not decide whether the termination was lawful or fair.",
+          "source_ids": ["ev-d1", "ev-d2", "ev-d3", "ev-d4"]
+        }
+      ],
+      "golden_demo": false
+    }
+  ]
+}
