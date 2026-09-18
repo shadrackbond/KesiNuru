@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CaseCategory {
+  UNPAID_WAGES
+  DELAYED_WAGES
+  FINAL_PAY
+  TERMINATION_DOCUMENTATION
+  NOTICE_REVIEW
+}
+
+enum CaseStage {
+  INTAKE
+  EVIDENCE
+  FACT_REVIEW
+  TIMELINE
+  NURU_CHECK
+  ACTION_PATH
+  CASEPACK
+  COMPLETE
+}
+
+enum VerificationStatus {
+  CANDIDATE
+  CONFIRMED
+  CORRECTED
+  REJECTED
+  USER_STATED
+  CONFLICTING
+}
+
+enum ProcessingStatus {
+  WAITING
+  PROCESSING
+  NEEDS_ATTENTION
+  READY
+  FAILED
+}
+
+enum RelationshipType {
+  SUPPORTS
+  CONFLICTS
+  CONTEXT
+}
+
+enum CheckSeverity {
+  INFO
+  ATTENTION
+  BLOCKING
+}
+
+model Case {
+  id               String              @id @default(cuid())
+  ownerSessionId   String
+  title            String
+  category         CaseCategory
+  jurisdiction     String              @default("Kenya")
+  stage            CaseStage           @default(INTAKE)
+  progress         Int                 @default(10)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  intakeResponses  IntakeResponse[]
+  evidenceFiles    EvidenceFile[]
+  events           CaseEvent[]
+  checks           NuruCheck[]
+  actionReferences ActionReference[]
+  documents        GeneratedDocument[]
+
+  @@index([ownerSessionId, updatedAt])
+}
+
+model IntakeResponse {
+  id                 String             @id @default(cuid())
+  caseId             String
+  questionKey        String
+  answer             Json
+  verificationStatus VerificationStatus @default(USER_STATED)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  case               Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, questionKey])
+  @@index([caseId])
+}
+
+model EvidenceFile {
+  id               String           @id @default(cuid())
+  caseId           String
+  filename         String
+  documentType     String
+  mimeType         String
+  sizeBytes        Int
+  storageKey       String           @unique
+  processingStatus ProcessingStatus @default(WAITING)
+  uploadedAt       DateTime         @default(now())
+  case             Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  facts            ExtractedFact[]
+  evidenceLinks    EvidenceLink[]
+
+  @@index([caseId, uploadedAt])
+}
+
+model ExtractedFact {
+  id                 String             @id @default(cuid())
+  evidenceFileId     String
+  factType           String
+  candidateValue     Json
+  correctedValue     Json?
+  page               Int?
+  excerpt            String?
+  confidence         Float?
+  verificationStatus VerificationStatus @default(CANDIDATE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  evidenceFile       EvidenceFile       @relation(fields: [evidenceFileId], references: [id], onDelete: Cascade)
+  evidenceLinks      EvidenceLink[]
+
+  @@index([evidenceFileId, factType])
+}
+
+model CaseEvent {
+  id                 String             @id @default(cuid())
+  caseId             String
+  eventType          String
+  eventDate          DateTime?
+  approximateDate    String?
+  description        String
+  verificationStatus VerificationStatus
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  case               Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  evidenceLinks      EvidenceLink[]
+
+  @@index([caseId, eventDate])
+}
+
+model EvidenceLink {
+  id              String           @id @default(cuid())
+  eventId         String
+  evidenceFileId  String
+  extractedFactId String?
+  relationship    RelationshipType
+  event           CaseEvent        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  evidenceFile    EvidenceFile     @relation(fields: [evidenceFileId], references: [id], onDelete: Cascade)
+  extractedFact   ExtractedFact?   @relation(fields: [extractedFactId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, evidenceFileId, extractedFactId])
+  @@index([evidenceFileId])
+}
+
+model NuruCheck {
+  id          String        @id @default(cuid())
+  caseId      String
+  checkType   String
+  severity    CheckSeverity
+  description String
+  status      String        @default("OPEN")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  case        Case          @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, status])
+}
+
+model LegalSource {
+  id           String            @id @default(cuid())
+  title        String
+  issuingBody  String
+  canonicalUrl String
+  provision    String?
+  versionDate  DateTime?
+  verifiedAt   DateTime
+  references   ActionReference[]
+
+  @@unique([canonicalUrl, provision])
+}
+
+model ActionReference {
+  id             String      @id @default(cuid())
+  caseId         String
+  legalSourceId  String
+  explanation    String
+  reviewRequired Boolean     @default(true)
+  case           Case        @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  legalSource    LegalSource @relation(fields: [legalSourceId], references: [id], onDelete: Restrict)
+
+  @@index([caseId])
+}
+
+model GeneratedDocument {
+  id           String    @id @default(cuid())
+  caseId       String
+  documentType String
+  version      Int       @default(1)
+  content      Json
+  generatedAt  DateTime  @default(now())
+  confirmedAt  DateTime?
+  case         Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, documentType])
+}

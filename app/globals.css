@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f6f4ed;
+  --foreground: #17211d;
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+::selection { background: #b9d8cc; color: #17211d; }
+
+@layer base {
+  body { @apply antialiased; }
+  a, button, input, select { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf focus-visible:ring-offset-2; }
+}
+
+@layer components {
+  .button-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-leaf disabled:cursor-not-allowed disabled:opacity-50; }
+  .button-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-forest/20 bg-white px-5 py-2.5 text-sm font-semibold text-forest transition hover:border-forest/40 hover:bg-mint/40; }
+  .surface { @apply rounded-3xl border border-forest/10 bg-white shadow-soft; }
+  .field { @apply mt-2 min-h-12 w-full rounded-2xl border border-forest/20 bg-white px-4 text-base text-ink placeholder:text-ink/40; }
+}
