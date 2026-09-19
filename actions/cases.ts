@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionId } from "@/lib/session";
+import { objectIdSchema } from "@/lib/validation";
 
 const createCaseSchema = z.object({
   title: z.string().trim().min(3).max(100),
@@ -27,7 +28,7 @@ export async function createCase(formData: FormData) {
 
 export async function deleteCase(formData: FormData) {
   const ownerSessionId = await requireSessionId();
-  const caseId = z.string().cuid().parse(formData.get("caseId"));
+  const caseId = objectIdSchema.parse(formData.get("caseId"));
   await prisma.case.deleteMany({ where: { id: caseId, ownerSessionId } });
   revalidatePath("/dashboard");
 }

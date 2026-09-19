@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -56,7 +56,7 @@ enum CheckSeverity {
 }
 
 model Case {
-  id               String              @id @default(cuid())
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
   ownerSessionId   String
   title            String
   category         CaseCategory
@@ -76,8 +76,8 @@ model Case {
 }
 
 model IntakeResponse {
-  id                 String             @id @default(cuid())
-  caseId             String
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  caseId             String             @db.ObjectId
   questionKey        String
   answer             Json
   verificationStatus VerificationStatus @default(USER_STATED)
@@ -90,13 +90,14 @@ model IntakeResponse {
 }
 
 model EvidenceFile {
-  id               String           @id @default(cuid())
-  caseId           String
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  caseId           String           @db.ObjectId
   filename         String
   documentType     String
   mimeType         String
   sizeBytes        Int
   storageKey       String           @unique
+  content          Bytes
   processingStatus ProcessingStatus @default(WAITING)
   uploadedAt       DateTime         @default(now())
   case             Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -107,8 +108,8 @@ model EvidenceFile {
 }
 
 model ExtractedFact {
-  id                 String             @id @default(cuid())
-  evidenceFileId     String
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  evidenceFileId     String             @db.ObjectId
   factType           String
   candidateValue     Json
   correctedValue     Json?
@@ -125,8 +126,8 @@ model ExtractedFact {
 }
 
 model CaseEvent {
-  id                 String             @id @default(cuid())
-  caseId             String
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  caseId             String             @db.ObjectId
   eventType          String
   eventDate          DateTime?
   approximateDate    String?
@@ -141,10 +142,10 @@ model CaseEvent {
 }
 
 model EvidenceLink {
-  id              String           @id @default(cuid())
-  eventId         String
-  evidenceFileId  String
-  extractedFactId String?
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  eventId         String           @db.ObjectId
+  evidenceFileId  String           @db.ObjectId
+  extractedFactId String?          @db.ObjectId
   relationship    RelationshipType
   event           CaseEvent        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   evidenceFile    EvidenceFile     @relation(fields: [evidenceFileId], references: [id], onDelete: Cascade)
@@ -155,8 +156,8 @@ model EvidenceLink {
 }
 
 model NuruCheck {
-  id          String        @id @default(cuid())
-  caseId      String
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  caseId      String        @db.ObjectId
   checkType   String
   severity    CheckSeverity
   description String
@@ -169,7 +170,7 @@ model NuruCheck {
 }
 
 model LegalSource {
-  id           String            @id @default(cuid())
+  id           String            @id @default(auto()) @map("_id") @db.ObjectId
   title        String
   issuingBody  String
   canonicalUrl String
@@ -182,9 +183,9 @@ model LegalSource {
 }
 
 model ActionReference {
-  id             String      @id @default(cuid())
-  caseId         String
-  legalSourceId  String
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  caseId         String      @db.ObjectId
+  legalSourceId  String      @db.ObjectId
   explanation    String
   reviewRequired Boolean     @default(true)
   case           Case        @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -194,8 +195,8 @@ model ActionReference {
 }
 
 model GeneratedDocument {
-  id           String    @id @default(cuid())
-  caseId       String
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  caseId       String    @db.ObjectId
   documentType String
   version      Int       @default(1)
   content      Json

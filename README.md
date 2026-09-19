@@ -74,15 +74,15 @@ Legal documents can contain sensitive personal data. The system should minimise 
 
 ## Core modules
 
-| Module | Responsibility |
-| --- | --- |
-| Nuru Intake | Conducts the guided interview and collects structured case facts |
-| Document Processor | Performs OCR, classification and structured extraction |
-| Evidence Map | Connects claims and events to supporting or conflicting evidence |
-| Case Timeline | Orders verified and unverified events chronologically |
-| Nuru Check | Detects missing information, contradictions and review triggers |
-| Action Path | Presents source-backed options and escalation routes |
-| CasePack | Produces an exportable summary, timeline and evidence index |
+| Module             | Responsibility                                                   |
+| ------------------ | ---------------------------------------------------------------- |
+| Nuru Intake        | Conducts the guided interview and collects structured case facts |
+| Document Processor | Performs OCR, classification and structured extraction           |
+| Evidence Map       | Connects claims and events to supporting or conflicting evidence |
+| Case Timeline      | Orders verified and unverified events chronologically            |
+| Nuru Check         | Detects missing information, contradictions and review triggers  |
+| Action Path        | Presents source-backed options and escalation routes             |
+| CasePack           | Produces an exportable summary, timeline and evidence index      |
 
 ## Proposed architecture
 
@@ -104,8 +104,8 @@ The final stack may change as the prototype evolves.
 
 - **Frontend:** Next.js, TypeScript and Tailwind CSS
 - **Backend:** Next.js server routes or Node.js service
-- **Database:** PostgreSQL with Prisma
-- **File storage:** Private object storage with time-limited access
+- **Database:** MongoDB with Prisma
+- **Evidence storage (MVP):** Private MongoDB binary records with ownership-checked access
 - **Document processing:** OCR plus schema-constrained extraction
 - **AI layer:** Retrieval-grounded language model with structured outputs
 - **Authentication:** Secure email or OAuth authentication
@@ -144,17 +144,48 @@ The prototype should be evaluated on more than the fluency of generated text. Im
 
 ## Getting started
 
-The application source code and runnable setup instructions will be added as implementation begins. The expected local workflow will be:
+Requirements: Node.js 20+, npm and either MongoDB Atlas or Docker.
 
 ```bash
 git clone <repository-url>
 cd kesinuru
-cp .env.example .env.local
+cp .env.example .env
 npm install
+npm run db:push
 npm run dev
 ```
 
-Environment variables, database migrations and seed instructions will be documented before the first runnable release. Never commit secrets or real user case files to the repository.
+Set `DATABASE_URL` to a MongoDB connection string and add a random `SESSION_SECRET` of at least 32 characters in `.env`; `.env.example` lists the required variables. MongoDB must run as a replica set because Prisma uses transactions. Never commit secrets or real user case files to the repository.
+
+For a local database:
+
+```bash
+docker compose up -d
+npm run db:push
+```
+
+For deployment, use a MongoDB Atlas connection string and run `npm run db:push` once against the target database before starting the application.
+
+Quality checks:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+## Implemented workflow
+
+- Eligibility, jurisdiction, emergency and processing-consent gate
+- Eight-step employment intake with incremental persistence
+- Answer review and editing before evidence upload
+- PDF, JPEG and PNG upload with a 10 MB limit
+- Server-side extension, MIME type and file-signature validation
+- Private database-backed evidence storage
+- Ownership-checked preview and deletion
+
+The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
 
 ## Roadmap
 
