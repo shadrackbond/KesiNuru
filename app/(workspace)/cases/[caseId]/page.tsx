@@ -16,7 +16,7 @@ import { formatCategory, formatDate } from "@/lib/format";
 const stages = [
   { label: "Guided intake", icon: ListChecks, available: true },
   { label: "Evidence upload", icon: FileUp, available: true },
-  { label: "Fact review", icon: Check, available: false },
+  { label: "Fact review", icon: Check, available: true },
   { label: "Timeline", icon: MapPinned, available: false },
   { label: "Nuru Check", icon: Sparkles, available: false },
   { label: "Action Path", icon: Route, available: false },
@@ -60,15 +60,15 @@ export default async function CaseWorkspacePage({
           <p className="text-sm font-bold uppercase tracking-[.16em] text-leaf">Current step</p>
           <h2 className="mt-3 text-2xl font-bold">Build the case record</h2>
           <p className="mt-3 max-w-2xl leading-7 text-ink/55">
-            Complete the guided intake, review every answer, then add the documents that support the
-            record.
+            Complete the guided intake, add supporting documents, then review each fact extracted
+            from the evidence before it moves into the case record.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link className="button-primary" href={`/cases/${item.id}/intake`}>
               {item.stage === "INTAKE" ? "Begin intake" : "Review intake"}
             </Link>
             <Link className="button-secondary" href={`/cases/${item.id}/evidence`}>
-              Upload evidence
+              Process evidence
             </Link>
           </div>
           <div className="mt-10 grid gap-3 sm:grid-cols-3">
@@ -103,7 +103,15 @@ export default async function CaseWorkspacePage({
                   <p className="text-sm font-bold">{label}</p>
                   <p className="text-xs">{available ? "Available" : "Upcoming milestone"}</p>
                 </div>
-                {(item.stage === "INTAKE" ? index === 0 : index === 1) ? (
+                {(
+                  item.stage === "INTAKE"
+                    ? index === 0
+                    : item.stage === "EVIDENCE"
+                      ? index === 1
+                      : item.stage === "FACT_REVIEW"
+                        ? index === 2
+                        : false
+                ) ? (
                   <Circle className="size-3 fill-leaf text-leaf" />
                 ) : null}
               </li>

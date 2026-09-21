@@ -1,7 +1,16 @@
-import { ArrowLeft, Eye, FileCheck2, FileUp, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BrainCircuit,
+  Eye,
+  FileCheck2,
+  FileUp,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deleteEvidence, uploadEvidence } from "@/actions/evidence";
+import { processEvidence } from "@/actions/processing";
 import { getOwnedCase } from "@/lib/cases";
 import { isEligibleAnswer } from "@/lib/intake";
 import { prisma } from "@/lib/prisma";
@@ -36,7 +45,10 @@ export default async function EvidencePage({
       documentType: true,
       sizeBytes: true,
       processingStatus: true,
+      processingSummary: true,
+      processingError: true,
       uploadedAt: true,
+      _count: { select: { facts: true } },
     },
     orderBy: { uploadedAt: "desc" },
   });
@@ -78,7 +90,6 @@ export default async function EvidencePage({
       <div className="mt-8 grid gap-6 lg:grid-cols-[380px_1fr]">
         <form
           action={uploadEvidence}
-          encType="multipart/form-data"
           className="surface space-y-5 p-6"
         >
           <input type="hidden" name="caseId" value={caseId} />
@@ -156,8 +167,18 @@ export default async function EvidencePage({
                         {file.documentType} · {fileSize(file.sizeBytes)} ·{" "}
                         {file.processingStatus.replaceAll("_", " ")}
                       </p>
+                      {file.processingSummary ? (
+                        <p className="mt-2 line-clamp-2 text-xs leading-5 text-ink/55">
+                          {file.processingSummary}
+                        </p>
+                      ) : null}
+                      {file.processingError ? (
+                        <p className="mt-2 text-xs font-semibold text-red-700">
+                          Processing needs attention.
+                        </p>
+                      ) : null}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Link
                         className="button-secondary min-h-9 px-3 py-1 text-xs"
                         href={`/cases/${caseId}/evidence/${file.id}`}
@@ -166,6 +187,29 @@ export default async function EvidencePage({
                         <Eye className="size-3.5" />
                         Preview
                       </Link>
+                      {file.processingStatus === "WAITING" ||
+                      file.processingStatus === "FAILED" ||
+                      file.processingStatus === "NEEDS_ATTENTION" ? (
+                        <form action={processEvidence}>
+                          <input type="hidden" name="caseId" value={caseId} />
+                          <input type="hidden" name="evidenceId" value={file.id} />
+                          <button
+                            className="button-primary min-h-9 px-3 py-1 text-xs"
+                            type="submit"
+                          >
+                            <BrainCircuit className="size-3.5" />
+                            Process
+                          </button>
+                        </form>
+                      ) : (
+                        <Link
+                          className="button-primary min-h-9 px-3 py-1 text-xs"
+                          href={`/cases/${caseId}/evidence/${file.id}/review`}
+                        >
+                          <FileCheck2 className="size-3.5" />
+                          Review {file._count.facts ? `(${file._count.facts})` : ""}
+                        </Link>
+                      )}
                       <form action={deleteEvidence}>
                         <input type="hidden" name="caseId" value={caseId} />
                         <input type="hidden" name="evidenceId" value={file.id} />
@@ -185,8 +229,8 @@ export default async function EvidencePage({
           )}
           <div className="mt-7 border-t border-forest/10 pt-6">
             <p className="text-sm text-ink/55">
-              When the core documents are uploaded, return to the case workspace. Document
-              processing is the next milestone.
+              Process each document, then confirm, correct or reject every extracted fact before
+              using it in the timeline or CasePack.
             </p>
             <Link href={`/cases/${caseId}`} className="button-primary mt-4">
               Finish evidence step

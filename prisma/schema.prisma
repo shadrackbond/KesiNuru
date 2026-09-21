@@ -90,19 +90,24 @@ model IntakeResponse {
 }
 
 model EvidenceFile {
-  id               String           @id @default(auto()) @map("_id") @db.ObjectId
-  caseId           String           @db.ObjectId
-  filename         String
-  documentType     String
-  mimeType         String
-  sizeBytes        Int
-  storageKey       String           @unique
-  content          Bytes
-  processingStatus ProcessingStatus @default(WAITING)
-  uploadedAt       DateTime         @default(now())
-  case             Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  facts            ExtractedFact[]
-  evidenceLinks    EvidenceLink[]
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  caseId            String           @db.ObjectId
+  filename          String
+  documentType      String
+  mimeType          String
+  sizeBytes         Int
+  storageKey        String           @unique
+  content           Bytes
+  processingStatus  ProcessingStatus @default(WAITING)
+  processingSummary String?
+  processingWarning String?
+  processingError   String?
+  modelVersion      String?
+  processedAt       DateTime?
+  uploadedAt        DateTime         @default(now())
+  case              Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  facts             ExtractedFact[]
+  evidenceLinks     EvidenceLink[]
 
   @@index([caseId, uploadedAt])
 }

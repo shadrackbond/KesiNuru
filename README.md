@@ -155,7 +155,7 @@ npm run db:push
 npm run dev
 ```
 
-Set `DATABASE_URL` to a MongoDB connection string and add a random `SESSION_SECRET` of at least 32 characters in `.env`; `.env.example` lists the required variables. MongoDB must run as a replica set because Prisma uses transactions. Never commit secrets or real user case files to the repository.
+Set `DATABASE_URL` to a MongoDB connection string, add a random `SESSION_SECRET` of at least 32 characters and add a server-side `GEMINI_API_KEY` in `.env`; `.env.example` lists the variables. You can override the default processing model with `GEMINI_MODEL`. MongoDB must run as a replica set because Prisma uses transactions. Never expose the Gemini key to the browser or commit secrets and real user case files to the repository.
 
 For a local database:
 
@@ -184,8 +184,13 @@ npm run build
 - Server-side extension, MIME type and file-signature validation
 - Private database-backed evidence storage
 - Ownership-checked preview and deletion
+- Gemini-powered PDF and image processing with a strict structured-output schema
+- Document classification, factual summaries and source-linked fact candidates
+- Page, excerpt and extraction-confidence provenance for every candidate
+- User confirmation, correction and rejection before downstream use
+- Prompt-injection warnings and a manual fact-entry fallback
 
-The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
+The processor treats document contents as untrusted evidence, not instructions, and does not ask the model for legal advice or outcome predictions. Model output is schema-validated and remains a candidate until a user reviews it. The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
 
 ## Roadmap
 
