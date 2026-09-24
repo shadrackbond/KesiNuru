@@ -189,6 +189,10 @@ npm run build
 - Page, excerpt and extraction-confidence provenance for every candidate
 - User confirmation, correction and rejection before downstream use
 - Prompt-injection warnings and a manual fact-entry fallback
+- Evidence-linked timeline generation from reviewed facts and intake responses
+- Editable exact or approximate dates with visible verification status
+- Deterministic Nuru Check rules for missing, conflicting and unsupported information
+- Blocking, attention and informational checks with explicit resolution controls
 
 The processor treats document contents as untrusted evidence, not instructions, and does not ask the model for legal advice or outcome predictions. Model output is schema-validated and remains a candidate until a user reviews it. The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
 

@@ -90,6 +90,7 @@ export default async function EvidencePage({
       <div className="mt-8 grid gap-6 lg:grid-cols-[380px_1fr]">
         <form
           action={uploadEvidence}
+          encType="multipart/form-data"
           className="surface space-y-5 p-6"
         >
           <input type="hidden" name="caseId" value={caseId} />

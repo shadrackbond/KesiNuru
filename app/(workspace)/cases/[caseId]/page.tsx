@@ -17,8 +17,8 @@ const stages = [
   { label: "Guided intake", icon: ListChecks, available: true },
   { label: "Evidence upload", icon: FileUp, available: true },
   { label: "Fact review", icon: Check, available: true },
-  { label: "Timeline", icon: MapPinned, available: false },
-  { label: "Nuru Check", icon: Sparkles, available: false },
+  { label: "Timeline", icon: MapPinned, available: true },
+  { label: "Nuru Check", icon: Sparkles, available: true },
   { label: "Action Path", icon: Route, available: false },
 ];
 
@@ -70,6 +70,12 @@ export default async function CaseWorkspacePage({
             <Link className="button-secondary" href={`/cases/${item.id}/evidence`}>
               Process evidence
             </Link>
+            <Link className="button-secondary" href={`/cases/${item.id}/timeline`}>
+              Build timeline
+            </Link>
+            <Link className="button-secondary" href={`/cases/${item.id}/nuru-check`}>
+              Nuru Check
+            </Link>
           </div>
           <div className="mt-10 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl bg-cream p-4">
@@ -110,7 +116,11 @@ export default async function CaseWorkspacePage({
                       ? index === 1
                       : item.stage === "FACT_REVIEW"
                         ? index === 2
-                        : false
+                        : item.stage === "TIMELINE"
+                          ? index === 3
+                          : item.stage === "NURU_CHECK"
+                            ? index === 4
+                            : false
                 ) ? (
                   <Circle className="size-3 fill-leaf text-leaf" />
                 ) : null}
