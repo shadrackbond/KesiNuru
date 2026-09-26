@@ -30,28 +30,28 @@ export async function uploadEvidence(formData: FormData) {
   const ownerSessionId = await requireSessionId();
   const item = await prisma.case.findFirst({
     where: { id: caseId, ownerSessionId },
-    select: { id: true },
+    select: {
+      id: true,
+      intakeResponses: {
+        where: { questionKey: "eligibility" },
+        select: { answer: true },
+        take: 1,
+      },
+      evidenceFiles: { select: { sizeBytes: true } },
+    },
   });
   if (!item) throw new Error("Case not found.");
-  const eligibility = await prisma.intakeResponse.findUnique({
-    where: { caseId_questionKey: { caseId, questionKey: "eligibility" } },
-    select: { answer: true },
-  });
-  if (!isEligibleAnswer(eligibility?.answer)) redirect(`/cases/${caseId}/intake`);
+  if (!isEligibleAnswer(item.intakeResponses[0]?.answer)) redirect(`/cases/${caseId}/intake`);
   const file = formData.get("file");
   if (!(file instanceof File)) redirect(`/cases/${caseId}/evidence?error=Choose%20a%20file`);
   if (file.size > MAX_EVIDENCE_BYTES) {
     redirect(`/cases/${caseId}/evidence?error=Files%20must%20be%2010%20MB%20or%20smaller`);
   }
-  const existing = await prisma.evidenceFile.aggregate({
-    where: { caseId },
-    _count: { _all: true },
-    _sum: { sizeBytes: true },
-  });
-  if (existing._count._all >= MAX_EVIDENCE_FILES_PER_CASE) {
+  if (item.evidenceFiles.length >= MAX_EVIDENCE_FILES_PER_CASE) {
     redirect(`/cases/${caseId}/evidence?error=This%20case%20already%20has%20the%20maximum%20number%20of%20files`);
   }
-  if ((existing._sum.sizeBytes ?? 0) + file.size > MAX_TOTAL_EVIDENCE_BYTES_PER_CASE) {
+  const existingBytes = item.evidenceFiles.reduce((total, evidence) => total + evidence.sizeBytes, 0);
+  if (existingBytes + file.size > MAX_TOTAL_EVIDENCE_BYTES_PER_CASE) {
     redirect(`/cases/${caseId}/evidence?error=This%20case%20has%20reached%20its%2050%20MB%20evidence%20limit`);
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -98,4 +98,5 @@ export async function deleteEvidence(formData: FormData) {
   await prisma.evidenceFile.delete({ where: { id: evidence.id } });
   revalidatePath(`/cases/${caseId}/evidence`);
   revalidatePath(`/cases/${caseId}`);
+  redirect(`/cases/${caseId}/evidence?deleted=1`);
 }

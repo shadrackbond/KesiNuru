@@ -11,9 +11,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deleteEvidence, uploadEvidence } from "@/actions/evidence";
 import { processEvidence } from "@/actions/processing";
-import { getOwnedCase } from "@/lib/cases";
+import { SubmitButton } from "@/components/submit-button";
 import { isEligibleAnswer } from "@/lib/intake";
 import { prisma } from "@/lib/prisma";
+import { requireSessionId } from "@/lib/session";
 
 function fileSize(bytes: number) {
   return bytes >= 1024 * 1024
@@ -26,32 +27,40 @@ export default async function EvidencePage({
   searchParams,
 }: {
   params: Promise<{ caseId: string }>;
-  searchParams: Promise<{ error?: string; uploaded?: string }>;
+  searchParams: Promise<{ error?: string; uploaded?: string; deleted?: string }>;
 }) {
   const { caseId } = await params;
   const query = await searchParams;
   if (!caseId) notFound();
-  const item = await getOwnedCase(caseId);
-  const eligibility = await prisma.intakeResponse.findUnique({
-    where: { caseId_questionKey: { caseId, questionKey: "eligibility" } },
-    select: { answer: true },
-  });
-  if (!isEligibleAnswer(eligibility?.answer)) redirect(`/cases/${caseId}/intake`);
-  const files = await prisma.evidenceFile.findMany({
-    where: { caseId },
+  const ownerSessionId = await requireSessionId();
+  const item = await prisma.case.findFirst({
+    where: { id: caseId, ownerSessionId },
     select: {
-      id: true,
-      filename: true,
-      documentType: true,
-      sizeBytes: true,
-      processingStatus: true,
-      processingSummary: true,
-      processingError: true,
-      uploadedAt: true,
-      _count: { select: { facts: true } },
+      title: true,
+      intakeResponses: {
+        where: { questionKey: "eligibility" },
+        select: { answer: true },
+        take: 1,
+      },
+      evidenceFiles: {
+        select: {
+          id: true,
+          filename: true,
+          documentType: true,
+          sizeBytes: true,
+          processingStatus: true,
+          processingSummary: true,
+          processingError: true,
+          uploadedAt: true,
+          _count: { select: { facts: true } },
+        },
+        orderBy: { uploadedAt: "desc" },
+      },
     },
-    orderBy: { uploadedAt: "desc" },
   });
+  if (!item) notFound();
+  if (!isEligibleAnswer(item.intakeResponses[0]?.answer)) redirect(`/cases/${caseId}/intake`);
+  const files = item.evidenceFiles;
   return (
     <div className="mx-auto max-w-5xl">
       <Link
@@ -85,6 +94,11 @@ export default async function EvidencePage({
           className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
         >
           Evidence uploaded successfully.
+        </div>
+      ) : null}
+      {query.deleted ? (
+        <div role="status" className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+          Evidence deleted.
         </div>
       ) : null}
       <div className="mt-8 grid gap-6 lg:grid-cols-[380px_1fr]">
@@ -131,10 +145,10 @@ export default async function EvidencePage({
               accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
             />
           </label>
-          <button className="button-primary w-full" type="submit">
+          <SubmitButton className="button-primary w-full" pendingText="Uploading securely…">
             <FileUp className="size-4" />
             Upload evidence
-          </button>
+          </SubmitButton>
           <div className="flex gap-3 rounded-2xl bg-mint/40 p-3 text-xs leading-5 text-forest">
             <ShieldCheck className="mt-0.5 size-4 shrink-0" />
             <p>
@@ -197,13 +211,13 @@ export default async function EvidencePage({
                         <form action={processEvidence}>
                           <input type="hidden" name="caseId" value={caseId} />
                           <input type="hidden" name="evidenceId" value={file.id} />
-                          <button
+                          <SubmitButton
                             className="button-primary min-h-9 px-3 py-1 text-xs"
-                            type="submit"
+                            pendingText="Processing…"
                           >
                             <BrainCircuit className="size-3.5" />
                             Process
-                          </button>
+                          </SubmitButton>
                         </form>
                       ) : (
                         <Link
@@ -217,13 +231,13 @@ export default async function EvidencePage({
                       <form action={deleteEvidence}>
                         <input type="hidden" name="caseId" value={caseId} />
                         <input type="hidden" name="evidenceId" value={file.id} />
-                        <button
+                        <SubmitButton
                           className="button-secondary min-h-9 px-3 py-1 text-xs text-red-700"
-                          type="submit"
+                          pendingText="Deleting…"
                         >
                           <Trash2 className="size-3.5" />
                           Delete
-                        </button>
+                        </SubmitButton>
                       </form>
                     </div>
                   </div>

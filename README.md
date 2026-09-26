@@ -262,6 +262,16 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the c
 
 Unless explicitly stated otherwise, sample legal content, datasets and third-party materials are not automatically covered by the software licence and must be used according to their respective terms.
 
+## Responsive action feedback and performance
+
+- Every server action immediately switches its submit button to a descriptive loading state and blocks duplicate submissions.
+- Workspace navigation has a route-level loading screen for slower database-backed pages.
+- Successful uploads, deletions, fact reviews and workflow transitions show explicit confirmation notices.
+- Intake and evidence flows combine ownership, eligibility and quota data into fewer MongoDB round trips.
+- Gemini document processing has a 60-second request timeout and remains visibly marked as processing while it runs.
+
+In local development, the first request to a route can still be slower while Next.js compiles it. Test production-like performance with `npm run build && npm start`.
+
 ## Project status
 
 KesiNuru is an early-stage prototype being developed for LexHack 2026. It is not currently suitable for use in real legal matters.

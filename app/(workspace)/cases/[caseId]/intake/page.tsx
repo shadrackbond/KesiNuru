@@ -2,9 +2,10 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { completeIntake, saveEligibility, saveIntakeStep } from "@/actions/intake";
-import { getOwnedCase } from "@/lib/cases";
+import { SubmitButton } from "@/components/submit-button";
 import { intakeSteps } from "@/lib/intake";
 import { prisma } from "@/lib/prisma";
+import { requireSessionId } from "@/lib/session";
 
 type Answer = Record<string, string | boolean>;
 
@@ -95,11 +96,16 @@ export default async function IntakePage({
   const { caseId } = await params;
   const query = await searchParams;
   if (!caseId) notFound();
-  const item = await getOwnedCase(caseId);
-  const responses = await prisma.intakeResponse.findMany({
-    where: { caseId },
-    orderBy: { createdAt: "asc" },
+  const ownerSessionId = await requireSessionId();
+  const item = await prisma.case.findFirst({
+    where: { id: caseId, ownerSessionId },
+    select: {
+      title: true,
+      intakeResponses: { orderBy: { createdAt: "asc" } },
+    },
   });
+  if (!item) notFound();
+  const responses = item.intakeResponses;
   const responseMap = new Map(
     responses.map((response) => [response.questionKey, answerRecord(response.answer)]),
   );
@@ -270,10 +276,10 @@ export default async function IntakePage({
             </span>
           </label>
           <div className="flex justify-end">
-            <button className="button-primary" type="submit">
+            <SubmitButton className="button-primary" pendingText="Checking answers…">
               Continue to intake
               <ArrowRight className="size-4" />
-            </button>
+            </SubmitButton>
           </div>
         </form>
       ) : null}
@@ -304,10 +310,10 @@ export default async function IntakePage({
             >
               Back
             </Link>
-            <button className="button-primary" type="submit">
+            <SubmitButton className="button-primary" pendingText="Saving answers…">
               Save and continue
               <ArrowRight className="size-4" />
-            </button>
+            </SubmitButton>
           </div>
         </form>
       ) : null}
@@ -363,10 +369,10 @@ export default async function IntakePage({
           </div>
           <form action={completeIntake} className="mt-7 flex justify-end">
             <input type="hidden" name="caseId" value={caseId} />
-            <button className="button-primary" type="submit">
+            <SubmitButton className="button-primary" pendingText="Completing intake…">
               Continue to evidence
               <ArrowRight className="size-4" />
-            </button>
+            </SubmitButton>
           </form>
         </section>
       ) : null}

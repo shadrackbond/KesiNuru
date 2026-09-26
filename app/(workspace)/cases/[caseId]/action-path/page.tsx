@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prepareActionPath } from "@/actions/casepack";
+import { SubmitButton } from "@/components/submit-button";
 import { buildActionPath, legalSourceSeeds } from "@/lib/action-path";
 import { getOwnedCase } from "@/lib/cases";
 import { formatDate } from "@/lib/format";
@@ -86,9 +87,9 @@ export default async function ActionPathPage({
         </div>
         <form action={prepareActionPath}>
           <input type="hidden" name="caseId" value={caseId} />
-          <button className="button-secondary" type="submit">
+          <SubmitButton className="button-secondary" pendingText="Preparing path…">
             <Route className="size-4" /> {references.length ? "Refresh path" : "Prepare path"}
-          </button>
+          </SubmitButton>
         </form>
       </div>
 

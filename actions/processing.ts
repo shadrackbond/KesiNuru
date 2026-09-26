@@ -204,5 +204,5 @@ export async function reviewFact(formData: FormData) {
   }
   revalidatePath(reviewPath(caseId, evidenceId));
   revalidatePath(`/cases/${caseId}`);
-  redirect(`${reviewPath(caseId, evidenceId)}#fact-${factId}`);
+  redirect(`${reviewPath(caseId, evidenceId)}?reviewed=1#fact-${factId}`);
 }

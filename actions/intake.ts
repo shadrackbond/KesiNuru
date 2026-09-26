@@ -19,12 +19,21 @@ async function requireOwnedCase(caseId: string) {
   return item;
 }
 
-async function requirePassedEligibility(caseId: string) {
-  const response = await prisma.intakeResponse.findUnique({
-    where: { caseId_questionKey: { caseId, questionKey: "eligibility" } },
-    select: { answer: true },
+async function requireOwnedIntake(caseId: string) {
+  const ownerSessionId = await requireSessionId();
+  const item = await prisma.case.findFirst({
+    where: { id: caseId, ownerSessionId },
+    select: {
+      id: true,
+      intakeResponses: { select: { questionKey: true, answer: true } },
+    },
   });
-  if (!isEligibleAnswer(response?.answer)) redirect(`/cases/${caseId}/intake`);
+  if (!item) throw new Error("Case not found.");
+  const eligibility = item.intakeResponses.find(
+    (response) => response.questionKey === "eligibility",
+  );
+  if (!isEligibleAnswer(eligibility?.answer)) redirect(`/cases/${caseId}/intake`);
+  return item;
 }
 
 export async function saveEligibility(formData: FormData) {
@@ -58,8 +67,7 @@ export async function saveIntakeStep(formData: FormData) {
     .min(0)
     .max(intakeSteps.length - 1)
     .parse(formData.get("stepIndex"));
-  await requireOwnedCase(caseId);
-  await requirePassedEligibility(caseId);
+  await requireOwnedIntake(caseId);
   let parsed: ReturnType<typeof normaliseStepAnswer>;
   try {
     parsed = normaliseStepAnswer(formData, stepIndex);
@@ -84,11 +92,10 @@ export async function saveIntakeStep(formData: FormData) {
 
 export async function completeIntake(formData: FormData) {
   const caseId = objectIdSchema.parse(formData.get("caseId"));
-  await requireOwnedCase(caseId);
-  await requirePassedEligibility(caseId);
-  const count = await prisma.intakeResponse.count({
-    where: { caseId, questionKey: { startsWith: "intake." } },
-  });
+  const item = await requireOwnedIntake(caseId);
+  const count = item.intakeResponses.filter((response) =>
+    response.questionKey.startsWith("intake."),
+  ).length;
   if (count !== intakeSteps.length)
     redirect(`/cases/${caseId}/intake?error=Complete%20all%20intake%20steps`);
   await prisma.case.update({

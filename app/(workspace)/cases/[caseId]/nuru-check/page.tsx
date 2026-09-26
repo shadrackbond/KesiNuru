@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveNuruCheck, runNuruCheck } from "@/actions/timeline";
+import { SubmitButton } from "@/components/submit-button";
 import { getOwnedCase } from "@/lib/cases";
 import { formatCategory } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -59,9 +60,9 @@ export default async function NuruCheckPage({
         </div>
         <form action={runNuruCheck}>
           <input type="hidden" name="caseId" value={caseId} />
-          <button className="button-secondary" type="submit">
+          <SubmitButton className="button-secondary" pendingText="Running checks…">
             <RefreshCw className="size-4" /> Run again
-          </button>
+          </SubmitButton>
         </form>
       </div>
 
@@ -138,9 +139,9 @@ export default async function NuruCheckPage({
                     <form action={resolveNuruCheck}>
                       <input type="hidden" name="caseId" value={caseId} />
                       <input type="hidden" name="checkId" value={check.id} />
-                      <button className="button-secondary min-h-9 px-3 py-1 text-xs" type="submit">
+                      <SubmitButton className="button-secondary min-h-9 px-3 py-1 text-xs" pendingText="Resolving…">
                         <CheckCircle2 className="size-3.5" /> Mark resolved
-                      </button>
+                      </SubmitButton>
                     </form>
                   ) : null}
                 </div>

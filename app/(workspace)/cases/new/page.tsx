@@ -1,6 +1,7 @@
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { createCase } from "@/actions/cases";
+import { SubmitButton } from "@/components/submit-button";
 
 const options = [
   ["UNPAID_WAGES", "Unpaid or partially paid wages"],
@@ -21,7 +22,7 @@ export default async function NewCasePage({ searchParams }: { searchParams: Prom
         <label className="block text-sm font-bold text-ink">Case title<input className="field" name="title" minLength={3} maxLength={100} required placeholder="e.g. July and August wage records" autoFocus /><span className="mt-2 block text-xs font-normal text-ink/45">Visible only inside this session.</span></label>
         <label className="block text-sm font-bold text-ink">What do you mainly want to organise?<select className="field" name="category" required defaultValue=""><option value="" disabled>Select a category</option>{options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <div className="flex gap-3 rounded-2xl bg-mint/50 p-4 text-sm leading-6 text-forest"><ShieldCheck className="mt-0.5 size-5 shrink-0" /><p>KesiNuru will organise information and evidence. It will not decide whether your case is legally valid or likely to succeed.</p></div>
-        <div className="flex flex-col-reverse gap-3 border-t border-forest/10 pt-6 sm:flex-row sm:justify-end"><Link href="/dashboard" className="button-secondary">Cancel</Link><button type="submit" className="button-primary">Create case</button></div>
+        <div className="flex flex-col-reverse gap-3 border-t border-forest/10 pt-6 sm:flex-row sm:justify-end"><Link href="/dashboard" className="button-secondary">Cancel</Link><SubmitButton className="button-primary" pendingText="Creating case…">Create case</SubmitButton></div>
       </form>
     </div>
   );

@@ -36,4 +36,5 @@ export async function deleteCase(formData: FormData) {
   const caseId = objectIdSchema.parse(formData.get("caseId"));
   await prisma.case.deleteMany({ where: { id: caseId, ownerSessionId } });
   revalidatePath("/dashboard");
+  redirect("/dashboard?deleted=1");
 }

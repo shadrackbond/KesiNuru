@@ -13,6 +13,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { confirmCasePack, generateCasePack } from "@/actions/casepack";
 import { PrintButton } from "@/components/print-button";
+import { SubmitButton } from "@/components/submit-button";
 import { casePackContentSchema } from "@/lib/casepack";
 import { getOwnedCase } from "@/lib/cases";
 import { formatCategory, formatDate } from "@/lib/format";
@@ -76,10 +77,10 @@ export default async function CasePackPage({
           </div>
           <form action={generateCasePack}>
             <input type="hidden" name="caseId" value={caseId} />
-            <button className="button-primary" type="submit">
+            <SubmitButton className="button-primary" pendingText="Generating CasePack…">
               {document ? <RefreshCw className="size-4" /> : <FileArchive className="size-4" />}
               {document ? "Generate new version" : "Generate CasePack"}
-            </button>
+            </SubmitButton>
           </form>
         </div>
 
@@ -123,9 +124,9 @@ export default async function CasePackPage({
             </Link>
             <form action={generateCasePack}>
               <input type="hidden" name="caseId" value={caseId} />
-              <button className="button-primary" type="submit">
+              <SubmitButton className="button-primary" pendingText="Generating draft…">
                 Generate draft
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </section>
@@ -168,9 +169,9 @@ export default async function CasePackPage({
                 <form action={confirmCasePack}>
                   <input type="hidden" name="caseId" value={caseId} />
                   <input type="hidden" name="documentId" value={document.id} />
-                  <button className="button-primary" type="submit">
+                  <SubmitButton className="button-primary" pendingText="Confirming version…">
                     <ShieldCheck className="size-4" /> Confirm this version
-                  </button>
+                  </SubmitButton>
                 </form>
               ) : null}
             </div>

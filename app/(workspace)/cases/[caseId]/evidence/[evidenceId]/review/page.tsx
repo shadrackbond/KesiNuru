@@ -12,9 +12,10 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addManualFact, processEvidence, reviewFact } from "@/actions/processing";
+import { SubmitButton } from "@/components/submit-button";
 import { factTypes } from "@/lib/document-analysis";
-import { getOwnedCase } from "@/lib/cases";
 import { prisma } from "@/lib/prisma";
+import { requireSessionId } from "@/lib/session";
 
 function jsonValue(value: unknown) {
   if (value && typeof value === "object" && !Array.isArray(value) && "value" in value) {
@@ -36,13 +37,13 @@ export default async function FactReviewPage({
   searchParams,
 }: {
   params: Promise<{ caseId: string; evidenceId: string }>;
-  searchParams: Promise<{ error?: string; processed?: string; manual?: string }>;
+  searchParams: Promise<{ error?: string; processed?: string; manual?: string; reviewed?: string }>;
 }) {
   const { caseId, evidenceId } = await params;
   const query = await searchParams;
-  await getOwnedCase(caseId);
+  const ownerSessionId = await requireSessionId();
   const evidence = await prisma.evidenceFile.findFirst({
-    where: { id: evidenceId, caseId },
+    where: { id: evidenceId, caseId, case: { ownerSessionId } },
     select: {
       id: true,
       filename: true,
@@ -96,17 +97,22 @@ export default async function FactReviewPage({
           <form action={processEvidence}>
             <input type="hidden" name="caseId" value={caseId} />
             <input type="hidden" name="evidenceId" value={evidence.id} />
-            <button className="button-primary" type="submit">
+            <SubmitButton className="button-primary" pendingText="Processing document…">
               {evidence.processingStatus === "WAITING" ? (
                 <FileSearch className="size-4" />
               ) : (
                 <RotateCw className="size-4" />
               )}
               {evidence.processingStatus === "WAITING" ? "Process document" : "Process again"}
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>
+      {query.reviewed ? (
+        <div role="status" className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+          Fact review saved.
+        </div>
+      ) : null}
 
       {query.error ? (
         <div
@@ -212,29 +218,29 @@ export default async function FactReviewPage({
                           <input type="hidden" name="caseId" value={caseId} />
                           <input type="hidden" name="evidenceId" value={evidence.id} />
                           <input type="hidden" name="factId" value={fact.id} />
-                          <button
+                          <SubmitButton
                             className="button-primary min-h-9 px-4 py-1 text-xs"
                             name="decision"
                             value="confirm"
-                            type="submit"
+                            pendingText="Confirming…"
                           >
                             <CheckCircle2 className="size-3.5" />
                             Confirm
-                          </button>
+                          </SubmitButton>
                         </form>
                         <form action={reviewFact}>
                           <input type="hidden" name="caseId" value={caseId} />
                           <input type="hidden" name="evidenceId" value={evidence.id} />
                           <input type="hidden" name="factId" value={fact.id} />
-                          <button
+                          <SubmitButton
                             className="button-secondary min-h-9 px-4 py-1 text-xs text-red-700"
                             name="decision"
                             value="reject"
-                            type="submit"
+                            pendingText="Rejecting…"
                           >
                             <XCircle className="size-3.5" />
                             Reject
-                          </button>
+                          </SubmitButton>
                         </form>
                       </div>
                       <form
@@ -251,15 +257,15 @@ export default async function FactReviewPage({
                           maxLength={500}
                           required
                         />
-                        <button
+                        <SubmitButton
                           className="button-secondary min-h-10 shrink-0"
                           name="decision"
                           value="correct"
-                          type="submit"
+                          pendingText="Saving correction…"
                         >
                           <PencilLine className="size-3.5" />
                           Save correction
-                        </button>
+                        </SubmitButton>
                       </form>
                     </div>
                   ) : null}
@@ -309,9 +315,9 @@ export default async function FactReviewPage({
               Supporting excerpt
               <textarea className="field min-h-24 py-3 text-sm" name="excerpt" maxLength={500} />
             </label>
-            <button className="button-secondary w-full" type="submit">
+            <SubmitButton className="button-secondary w-full" pendingText="Adding fact…">
               Add user-stated fact
-            </button>
+            </SubmitButton>
           </form>
         </aside>
       </div>

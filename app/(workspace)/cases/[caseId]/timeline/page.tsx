@@ -17,6 +17,7 @@ import {
   runNuruCheck,
   updateTimelineEvent,
 } from "@/actions/timeline";
+import { SubmitButton } from "@/components/submit-button";
 import { getOwnedCase } from "@/lib/cases";
 import { formatCategory, formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -84,16 +85,16 @@ export default async function TimelinePage({
           {events.length === 0 ? (
             <form action={generateTimeline}>
               <input type="hidden" name="caseId" value={caseId} />
-              <button className="button-primary" type="submit">
+              <SubmitButton className="button-primary" pendingText="Generating timeline…">
                 <CalendarDays className="size-4" /> Generate timeline
-              </button>
+              </SubmitButton>
             </form>
           ) : null}
           <form action={runNuruCheck}>
             <input type="hidden" name="caseId" value={caseId} />
-            <button className="button-secondary" type="submit">
+            <SubmitButton className="button-secondary" pendingText="Running checks…">
               <Sparkles className="size-4" /> Run Nuru Check
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>
@@ -221,20 +222,20 @@ export default async function TimelinePage({
                             required
                           />
                         </label>
-                        <button className="button-secondary sm:col-span-2" type="submit">
+                        <SubmitButton className="button-secondary sm:col-span-2" pendingText="Saving correction…">
                           Save corrected event
-                        </button>
+                        </SubmitButton>
                       </form>
                     </details>
                     <form action={deleteTimelineEvent} className="mt-3">
                       <input type="hidden" name="caseId" value={caseId} />
                       <input type="hidden" name="eventId" value={event.id} />
-                      <button
+                      <SubmitButton
                         className="inline-flex items-center gap-2 text-xs font-bold text-red-700"
-                        type="submit"
+                        pendingText="Deleting…"
                       >
                         <Trash2 className="size-3.5" /> Delete event
-                      </button>
+                      </SubmitButton>
                     </form>
                   </article>
                 </li>
@@ -283,9 +284,9 @@ export default async function TimelinePage({
                 required
               />
             </label>
-            <button className="button-primary w-full" type="submit">
+            <SubmitButton className="button-primary w-full" pendingText="Adding event…">
               <FileText className="size-4" /> Add event
-            </button>
+            </SubmitButton>
           </form>
         </aside>
       </div>
