@@ -25,4 +25,14 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
   .button-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-forest/20 bg-white px-5 py-2.5 text-sm font-semibold text-forest transition hover:border-forest/40 hover:bg-mint/40; }
   .surface { @apply rounded-3xl border border-forest/10 bg-white shadow-soft; }
   .field { @apply mt-2 min-h-12 w-full rounded-2xl border border-forest/20 bg-white px-4 text-base text-ink placeholder:text-ink/40; }
+  .casepack-heading { @apply border-b border-forest/10 pb-3 text-xl font-bold; }
+}
+
+@media print {
+  @page { margin: 16mm; }
+  body { background: white !important; }
+  aside, header, nav, .no-print { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; }
+  .casepack-print { margin: 0 !important; border: 0 !important; box-shadow: none !important; }
+  .casepack-print section, .casepack-print li, .casepack-print tr { break-inside: avoid; }
 }

@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Check,
   Circle,
+  FileArchive,
   FileUp,
   ListChecks,
   MapPinned,
@@ -19,7 +20,8 @@ const stages = [
   { label: "Fact review", icon: Check, available: true },
   { label: "Timeline", icon: MapPinned, available: true },
   { label: "Nuru Check", icon: Sparkles, available: true },
-  { label: "Action Path", icon: Route, available: false },
+  { label: "Action Path", icon: Route, available: true },
+  { label: "CasePack", icon: FileArchive, available: true },
 ];
 
 export default async function CaseWorkspacePage({
@@ -51,9 +53,9 @@ export default async function CaseWorkspacePage({
             {formatCategory(item.category)} · Updated {formatDate(item.updatedAt)}
           </p>
         </div>
-        <button className="button-secondary" disabled>
+        <Link className="button-secondary" href={`/cases/${item.id}/casepack`}>
           Export CasePack
-        </button>
+        </Link>
       </div>
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="surface p-6 sm:p-8">
@@ -75,6 +77,12 @@ export default async function CaseWorkspacePage({
             </Link>
             <Link className="button-secondary" href={`/cases/${item.id}/nuru-check`}>
               Nuru Check
+            </Link>
+            <Link className="button-secondary" href={`/cases/${item.id}/action-path`}>
+              Action Path
+            </Link>
+            <Link className="button-secondary" href={`/cases/${item.id}/casepack`}>
+              CasePack
             </Link>
           </div>
           <div className="mt-10 grid gap-3 sm:grid-cols-3">
@@ -120,7 +128,11 @@ export default async function CaseWorkspacePage({
                           ? index === 3
                           : item.stage === "NURU_CHECK"
                             ? index === 4
-                            : false
+                            : item.stage === "ACTION_PATH"
+                              ? index === 5
+                              : item.stage === "CASEPACK" || item.stage === "COMPLETE"
+                                ? index === 6
+                                : false
                 ) ? (
                   <Circle className="size-3 fill-leaf text-leaf" />
                 ) : null}

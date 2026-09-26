@@ -193,6 +193,12 @@ npm run build
 - Editable exact or approximate dates with visible verification status
 - Deterministic Nuru Check rules for missing, conflicting and unsupported information
 - Blocking, attention and informational checks with explicit resolution controls
+- Deterministic Action Path with readiness status and cautious next-step sequencing
+- Official Kenya Law, State Department for Labour and Judiciary source links
+- Versioned CasePack snapshots containing reviewed facts, timeline, evidence index and open checks
+- Print/save-as-PDF presentation, ownership-checked JSON download and explicit user confirmation
+
+The Action Path is generated from reviewed case data and deterministic rules, not from model-written legal advice. Its official links are intentionally visible and should be rechecked before use. CasePack exports contain evidence metadata and reviewed excerpts, but never embed the private binary contents of uploaded files.
 
 The processor treats document contents as untrusted evidence, not instructions, and does not ask the model for legal advice or outcome predictions. Model output is schema-validated and remains a candidate until a user reviews it. The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
 
