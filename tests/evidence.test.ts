@@ -33,7 +33,27 @@ describe("evidence validation", () => {
         "application/pdf",
         new TextEncoder().encode("%PDF-1.7 /OpenAction 1 0 R"),
       ),
-    ).toThrow(/active or embedded/);
+    ).toThrow(/executable actions/);
+  });
+
+  it("allows inert embedded metadata streams", () => {
+    expect(
+      validateEvidenceFile(
+        "signed-record.pdf",
+        "application/pdf",
+        new TextEncoder().encode("%PDF-1.7 /Type /EmbeddedFile /Subtype /application#2Foctet-stream"),
+      ),
+    ).toEqual({ extension: ".pdf", filename: "signed-record.pdf" });
+  });
+
+  it("rejects visible file-attachment annotations", () => {
+    expect(() =>
+      validateEvidenceFile(
+        "attached.pdf",
+        "application/pdf",
+        new TextEncoder().encode("%PDF-1.7 /Subtype /FileAttachment /FS 10 0 R"),
+      ),
+    ).toThrow(/file attachments/);
   });
 
   it("rejects oversized PNG dimensions", () => {

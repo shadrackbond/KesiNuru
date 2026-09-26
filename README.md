@@ -193,7 +193,7 @@ npm run build
 - Answer review and editing before evidence upload
 - PDF, JPEG and PNG upload with a 10 MB limit
 - Per-case limits of 20 files and 50 MB total evidence
-- Server-side extension, MIME type, signature, image-dimension and active-PDF validation
+- Server-side extension, MIME type, signature, image-dimension and executable-PDF validation
 - Private database-backed evidence storage
 - Ownership-checked preview and deletion
 - Gemini-powered PDF and image processing with a strict structured-output schema

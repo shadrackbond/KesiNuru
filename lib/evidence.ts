@@ -13,9 +13,19 @@ const allowed = {
 
 function inspectPdf(bytes: Uint8Array) {
   const text = Buffer.from(bytes).toString("latin1");
-  const activeMarkers = ["/JavaScript", "/OpenAction", "/Launch", "/EmbeddedFile", "/RichMedia"];
+  // `/EmbeddedFile` alone is not proof of active content. PDF provenance/signing
+  // systems commonly use an embedded metadata stream, including on otherwise
+  // static PDFs. Block executable actions and user-facing attachment annotations
+  // instead of rejecting every embedded stream.
+  const activeMarkers = [
+    "/JavaScript",
+    "/OpenAction",
+    "/Launch",
+    "/RichMedia",
+    "/FileAttachment",
+  ];
   if (activeMarkers.some((marker) => text.includes(marker))) {
-    throw new Error("PDFs containing active or embedded content are not accepted.");
+    throw new Error("PDFs containing executable actions or file attachments are not accepted.");
   }
 }
 
