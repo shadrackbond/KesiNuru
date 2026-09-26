@@ -5,7 +5,12 @@ import { CaseStage } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { validateEvidenceFile } from "@/lib/evidence";
+import {
+  MAX_EVIDENCE_BYTES,
+  MAX_EVIDENCE_FILES_PER_CASE,
+  MAX_TOTAL_EVIDENCE_BYTES_PER_CASE,
+  validateEvidenceFile,
+} from "@/lib/evidence";
 import { isEligibleAnswer } from "@/lib/intake";
 import { prisma } from "@/lib/prisma";
 import { requireSessionId } from "@/lib/session";
@@ -35,10 +40,25 @@ export async function uploadEvidence(formData: FormData) {
   if (!isEligibleAnswer(eligibility?.answer)) redirect(`/cases/${caseId}/intake`);
   const file = formData.get("file");
   if (!(file instanceof File)) redirect(`/cases/${caseId}/evidence?error=Choose%20a%20file`);
+  if (file.size > MAX_EVIDENCE_BYTES) {
+    redirect(`/cases/${caseId}/evidence?error=Files%20must%20be%2010%20MB%20or%20smaller`);
+  }
+  const existing = await prisma.evidenceFile.aggregate({
+    where: { caseId },
+    _count: { _all: true },
+    _sum: { sizeBytes: true },
+  });
+  if (existing._count._all >= MAX_EVIDENCE_FILES_PER_CASE) {
+    redirect(`/cases/${caseId}/evidence?error=This%20case%20already%20has%20the%20maximum%20number%20of%20files`);
+  }
+  if ((existing._sum.sizeBytes ?? 0) + file.size > MAX_TOTAL_EVIDENCE_BYTES_PER_CASE) {
+    redirect(`/cases/${caseId}/evidence?error=This%20case%20has%20reached%20its%2050%20MB%20evidence%20limit`);
+  }
   const bytes = new Uint8Array(await file.arrayBuffer());
   let extension: string;
+  let filename: string;
   try {
-    extension = validateEvidenceFile(file.name, file.type, bytes).extension;
+    ({ extension, filename } = validateEvidenceFile(file.name, file.type, bytes));
   } catch (error) {
     const message = error instanceof Error ? error.message : "The file could not be accepted.";
     redirect(`/cases/${caseId}/evidence?error=${encodeURIComponent(message)}`);
@@ -48,7 +68,7 @@ export async function uploadEvidence(formData: FormData) {
     prisma.evidenceFile.create({
       data: {
         caseId,
-        filename: file.name,
+        filename,
         documentType,
         mimeType: file.type,
         sizeBytes: bytes.length,

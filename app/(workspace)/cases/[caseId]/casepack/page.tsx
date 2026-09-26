@@ -30,7 +30,12 @@ export default async function CasePackPage({
   searchParams,
 }: {
   params: Promise<{ caseId: string }>;
-  searchParams: Promise<{ generated?: string; confirmed?: string; documentId?: string }>;
+  searchParams: Promise<{
+    generated?: string;
+    confirmed?: string;
+    documentId?: string;
+    error?: string;
+  }>;
 }) {
   const { caseId } = await params;
   if (!caseId) notFound();
@@ -84,6 +89,14 @@ export default async function CasePackPage({
             className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
           >
             A new CasePack snapshot was generated from the current case record.
+          </div>
+        ) : null}
+        {query.error ? (
+          <div
+            role="alert"
+            className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800"
+          >
+            {query.error}
           </div>
         ) : null}
         {query.confirmed ? (

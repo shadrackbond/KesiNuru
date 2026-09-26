@@ -10,7 +10,11 @@ type CheckInput = {
   responses: Array<{ questionKey: string; answer: unknown }>;
   facts: TimelineFact[];
   candidateCount: number;
-  evidence: Array<{ documentType: string }>;
+  evidence: Array<{
+    documentType: string;
+    processingStatus?: string;
+    processingWarning?: string | null;
+  }>;
   events: Array<{ eventDate: Date | null; evidenceLinks: unknown[] }>;
 };
 
@@ -41,6 +45,19 @@ export function evaluateNuruChecks(input: CheckInput): NuruCheckResult[] {
       checkType: "UNREVIEWED_FACTS",
       severity: "BLOCKING",
       description: `${input.candidateCount} extracted fact${input.candidateCount === 1 ? " is" : "s are"} still awaiting confirmation, correction or rejection.`,
+    });
+  }
+  const processingAttention = input.evidence.filter(
+    (item) =>
+      item.processingWarning ||
+      item.processingStatus === "FAILED" ||
+      item.processingStatus === "NEEDS_ATTENTION",
+  );
+  if (processingAttention.length > 0) {
+    checks.push({
+      checkType: "DOCUMENT_PROCESSING_ATTENTION",
+      severity: "ATTENTION",
+      description: `${processingAttention.length} evidence file${processingAttention.length === 1 ? " requires" : "s require"} manual review because processing raised a warning or did not complete cleanly.`,
     });
   }
   if (!input.events.length) {

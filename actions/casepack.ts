@@ -176,9 +176,23 @@ export async function confirmCasePack(formData: FormData) {
   const ownerSessionId = await requireOwnedCase(caseId);
   const document = await prisma.generatedDocument.findFirst({
     where: { id: documentId, caseId, case: { ownerSessionId } },
-    select: { id: true },
+    select: { id: true, version: true },
   });
   if (!document) throw new Error("CasePack not found.");
+  const latest = await prisma.generatedDocument.findFirst({
+    where: { caseId, documentType: "CASEPACK" },
+    orderBy: { version: "desc" },
+    select: { id: true },
+  });
+  if (latest?.id !== document.id) {
+    redirect(`/cases/${caseId}/casepack?error=Only%20the%20latest%20CasePack%20can%20be%20confirmed`);
+  }
+  const blockingChecks = await prisma.nuruCheck.count({
+    where: { caseId, status: "OPEN", severity: "BLOCKING" },
+  });
+  if (blockingChecks > 0) {
+    redirect(`/cases/${caseId}/casepack?error=Resolve%20blocking%20Nuru%20Checks%20before%20confirmation`);
+  }
   await prisma.$transaction([
     prisma.generatedDocument.update({ where: { id: documentId }, data: { confirmedAt: new Date() } }),
     prisma.case.update({ where: { id: caseId }, data: { stage: CaseStage.COMPLETE, progress: 100 } }),

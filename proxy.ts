@@ -51,7 +51,12 @@ async function sign(id: string, secret: string) {
 
 export async function proxy(request: NextRequest) {
   const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) return NextResponse.next();
+  if (!secret || secret.length < 32) {
+    return NextResponse.json(
+      { error: "The application session service is not configured." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   if (await sessionIsValid(request.cookies.get(COOKIE)?.value, secret)) return NextResponse.next();
 
   const id = crypto.randomUUID();
@@ -68,5 +73,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/health|_next/static|_next/image|favicon.ico).*)"],
 };

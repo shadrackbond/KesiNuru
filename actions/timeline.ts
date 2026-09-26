@@ -192,6 +192,8 @@ export async function runNuruCheck(formData: FormData) {
       evidenceFiles: {
         select: {
           documentType: true,
+          processingStatus: true,
+          processingWarning: true,
           facts: {
             select: {
               id: true,

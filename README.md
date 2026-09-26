@@ -166,6 +166,17 @@ npm run db:push
 
 For deployment, use a MongoDB Atlas connection string and run `npm run db:push` once against the target database before starting the application.
 
+### Deployment checklist
+
+1. Create a MongoDB Atlas database user with a unique password and include the database name in `DATABASE_URL`.
+2. Add the deployment provider's outbound address to the Atlas IP Access List. Avoid `0.0.0.0/0` outside a short-lived demonstration.
+3. Configure `SESSION_SECRET` with at least 32 random characters and keep `GEMINI_API_KEY` server-side.
+4. Run `npm run db:push`, then deploy the same commit that passed the quality checks below.
+5. Request `/api/health`. A `200` response means configuration and database connectivity are ready; `503` means deployment needs attention.
+6. Complete the Kazi Hub intake-to-CasePack smoke test in a fresh browser session.
+
+The health response never returns connection strings or API keys. Dynamic case and evidence responses use private/no-store caching where appropriate.
+
 Quality checks:
 
 ```bash
@@ -181,7 +192,8 @@ npm run build
 - Eight-step employment intake with incremental persistence
 - Answer review and editing before evidence upload
 - PDF, JPEG and PNG upload with a 10 MB limit
-- Server-side extension, MIME type and file-signature validation
+- Per-case limits of 20 files and 50 MB total evidence
+- Server-side extension, MIME type, signature, image-dimension and active-PDF validation
 - Private database-backed evidence storage
 - Ownership-checked preview and deletion
 - Gemini-powered PDF and image processing with a strict structured-output schema
@@ -189,6 +201,7 @@ npm run build
 - Page, excerpt and extraction-confidence provenance for every candidate
 - User confirmation, correction and rejection before downstream use
 - Prompt-injection warnings and a manual fact-entry fallback
+- Bounded AI responses, one transient retry and automatic recovery from stale processing locks
 - Evidence-linked timeline generation from reviewed facts and intake responses
 - Editable exact or approximate dates with visible verification status
 - Deterministic Nuru Check rules for missing, conflicting and unsupported information
@@ -197,10 +210,15 @@ npm run build
 - Official Kenya Law, State Department for Labour and Judiciary source links
 - Versioned CasePack snapshots containing reviewed facts, timeline, evidence index and open checks
 - Print/save-as-PDF presentation, ownership-checked JSON download and explicit user confirmation
+- Content Security Policy, clickjacking protection, MIME sniffing protection and restrictive browser permissions
+- Deployment readiness endpoint and user-safe case error recovery
+- End-to-end Kazi Hub workflow test covering intake-derived data through CasePack
 
 The Action Path is generated from reviewed case data and deterministic rules, not from model-written legal advice. Its official links are intentionally visible and should be rechecked before use. CasePack exports contain evidence metadata and reviewed excerpts, but never embed the private binary contents of uploaded files.
 
-The processor treats document contents as untrusted evidence, not instructions, and does not ask the model for legal advice or outcome predictions. Model output is schema-validated and remains a candidate until a user reviews it. The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem. Move large-scale production evidence to encrypted private object storage with short-lived signed access URLs and malware scanning.
+The processor treats document contents as untrusted evidence, not instructions, and does not ask the model for legal advice or outcome predictions. Model output is schema-validated and remains a candidate until a user reviews it. Files that raise prompt-injection or processing warnings are surfaced through Nuru Check. The MVP stores evidence as MongoDB binary data for dependable deployment without relying on an ephemeral application filesystem.
+
+The prototype performs static upload checks but does not include a full antivirus engine. Before a real-user pilot, move evidence to encrypted private object storage, scan it with a maintained malware service, add durable distributed rate limiting, replace anonymous sessions with verified authentication, define retention/deletion policies and arrange Kenyan legal-professional review.
 
 ## Roadmap
 

@@ -2,6 +2,9 @@ import "server-only";
 
 import { documentAnalysisJsonSchema, parseDocumentAnalysis } from "@/lib/document-analysis";
 
+const MAX_GEMINI_RESPONSE_BYTES = 1_000_000;
+const MODEL_NAME = /^[a-zA-Z0-9._-]{1,80}$/;
+
 function responseText(payload: unknown) {
   if (!payload || typeof payload !== "object") return null;
   const response = payload as {
@@ -43,31 +46,47 @@ export async function analyseDocument(input: { content: Uint8Array; mimeType: st
     throw new Error("Gemini processing is not configured. Add GEMINI_API_KEY to .env.");
   }
   const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
+  if (!MODEL_NAME.test(model)) throw new Error("GEMINI_MODEL contains invalid characters.");
   const mediaType = input.mimeType === "application/pdf" ? "document" : "image";
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-    body: JSON.stringify({
-      model,
-      input: [
-        { type: "text", text: extractionPrompt },
-        {
-          type: mediaType,
-          data: Buffer.from(input.content).toString("base64"),
-          mime_type: input.mimeType,
-        },
-      ],
-      response_format: {
-        type: "text",
-        mime_type: "application/json",
-        schema: documentAnalysisJsonSchema,
+  const requestBody = JSON.stringify({
+    model,
+    input: [
+      { type: "text", text: extractionPrompt },
+      {
+        type: mediaType,
+        data: Buffer.from(input.content).toString("base64"),
+        mime_type: input.mimeType,
       },
-      generation_config: { temperature: 0.1 },
-    }),
-    signal: AbortSignal.timeout(90_000),
+    ],
+    response_format: {
+      type: "text",
+      mime_type: "application/json",
+      schema: documentAnalysisJsonSchema,
+    },
+    generation_config: { temperature: 0.1 },
   });
-
-  const payload: unknown = await response.json().catch(() => null);
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: requestBody,
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (response.status !== 429 && response.status < 500) break;
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+  if (!response) throw new Error("Gemini request could not be started.");
+  const rawPayload = await response.text();
+  if (Buffer.byteLength(rawPayload, "utf8") > MAX_GEMINI_RESPONSE_BYTES) {
+    throw new Error("Gemini response exceeded the safety limit.");
+  }
+  let payload: unknown = null;
+  try {
+    payload = JSON.parse(rawPayload);
+  } catch {
+    if (response.ok) throw new Error("Gemini returned an invalid response envelope.");
+  }
   if (!response.ok) {
     const message =
       payload && typeof payload === "object" && "error" in payload

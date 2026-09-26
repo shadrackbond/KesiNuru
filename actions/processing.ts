@@ -28,7 +28,10 @@ export async function processEvidence(formData: FormData) {
   const caseId = objectIdSchema.parse(formData.get("caseId"));
   const evidenceId = objectIdSchema.parse(formData.get("evidenceId"));
   const evidence = await requireOwnedEvidence(caseId, evidenceId);
-  if (evidence.processingStatus === ProcessingStatus.PROCESSING) {
+  const processingIsFresh =
+    evidence.processingStartedAt &&
+    Date.now() - evidence.processingStartedAt.getTime() < 2 * 60 * 1000;
+  if (evidence.processingStatus === ProcessingStatus.PROCESSING && processingIsFresh) {
     redirect(`${reviewPath(caseId, evidenceId)}?error=Processing%20is%20already%20running`);
   }
   if (
@@ -47,6 +50,7 @@ export async function processEvidence(formData: FormData) {
     where: { id: evidenceId },
     data: {
       processingStatus: ProcessingStatus.PROCESSING,
+      processingStartedAt: new Date(),
       processingError: null,
       processingWarning: null,
     },
@@ -87,7 +91,10 @@ export async function processEvidence(formData: FormData) {
           processingWarning: warning || null,
           processingError: null,
           processingStatus:
-            analysis.facts.length > 0 ? ProcessingStatus.READY : ProcessingStatus.NEEDS_ATTENTION,
+            analysis.facts.length > 0 && !analysis.promptInjectionDetected
+              ? ProcessingStatus.READY
+              : ProcessingStatus.NEEDS_ATTENTION,
+          processingStartedAt: null,
           modelVersion: model,
           processedAt: new Date(),
         },
@@ -105,7 +112,11 @@ export async function processEvidence(formData: FormData) {
       : "Processing failed. Retry or add facts manually.";
     await prisma.evidenceFile.update({
       where: { id: evidenceId },
-      data: { processingStatus: ProcessingStatus.FAILED, processingError: storedError },
+      data: {
+        processingStatus: ProcessingStatus.FAILED,
+        processingStartedAt: null,
+        processingError: storedError,
+      },
     });
     revalidatePath(`/cases/${caseId}/evidence`);
     const publicMessage = detail.includes("GEMINI_API_KEY")

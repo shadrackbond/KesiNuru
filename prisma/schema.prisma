@@ -103,6 +103,7 @@ model EvidenceFile {
   processingWarning String?
   processingError   String?
   modelVersion      String?
+  processingStartedAt DateTime?
   processedAt       DateTime?
   uploadedAt        DateTime         @default(now())
   case              Case             @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -210,4 +211,5 @@ model GeneratedDocument {
   case         Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   @@index([caseId, documentType])
+  @@unique([caseId, documentType, version])
 }

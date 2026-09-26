@@ -100,7 +100,7 @@ export default async function EvidencePage({
           <div>
             <h2 className="text-xl font-bold">Upload a file</h2>
             <p className="mt-1 text-sm leading-6 text-ink/50">
-              PDF, JPEG or PNG. Maximum 10 MB per file.
+              PDF, JPEG or PNG. Maximum 10 MB per file, 20 files and 50 MB per case.
             </p>
           </div>
           <label className="block text-sm font-bold">
@@ -137,7 +137,10 @@ export default async function EvidencePage({
           </button>
           <div className="flex gap-3 rounded-2xl bg-mint/40 p-3 text-xs leading-5 text-forest">
             <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-            <p>Type, extension, content signature and file size are validated on the server.</p>
+            <p>
+              Type, extension, signature, size, image dimensions and active PDF content are checked
+              on the server. This prototype does not replace production malware scanning.
+            </p>
           </div>
         </form>
         <section className="surface p-6">
